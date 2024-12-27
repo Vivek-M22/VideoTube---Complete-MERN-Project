@@ -16,3 +16,6 @@ const connectDB = async () => {
 }
 
 export default connectDB;
+
+
+// initial project and DB connect setup is done 
