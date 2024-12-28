@@ -17,5 +17,19 @@ app.use(express.static("public"))                              //setting some da
 app.use(cookieParser())                                       // use cookieParser for, performing CRUD operation on the server 
 
 
+//Routes import 
+import userRoute from './routes/user.routes.js'         // mnn chaha naam de skte ho jb export default ho rhka ho 
+                  
+
+//routes declaration 
+app.use("/api/v1/users" , userRoute)
+
 export {app}
 // export default app
+
+
+
+
+//routes declaration 
+//--here app.get() not used because now , we are not defining routes in app.js file we are defining in other folder so we use middleware for accesing those routes.
+// http://localhost:8000/api/v1/users/register
