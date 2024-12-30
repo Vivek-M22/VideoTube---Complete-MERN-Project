@@ -5,6 +5,24 @@ import {uploadOnCloudinary} from "../utils/Cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js"
 
 
+const generateAccessAndRefreshTokens = async(userId) => 
+{
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
+
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
+
+        return {accessToken , refreshToken }
+
+    } catch (error) {
+        throw new ApiError(500 , "Something went wrong while generating refresh and access token")
+    }
+}
+
+
 const registerUser = asyncHandler( async (req , res) => {
     //STEPS TO REGISTER THE USER
     // 1. get user details from frontend
@@ -88,8 +106,108 @@ const registerUser = asyncHandler( async (req , res) => {
 })
 
 
+const loginUser = asyncHandler( async (req , res) => {
+    // STEPS FOR LOGINUSER
+    //1. fetch data using req.body 
+    //2. check : username or email 
+    //3. find the user
+    //4. password check
+    //5. access and referesh token
+    //6. send cookie
+
+    //1. fetch data using req.body 
+    const {email , username , password }  = req.body
+
+
+    //2. check : username or email 
+    if(!username && !email ){
+        throw new ApiError(400 , "username or email is required")
+    }
+
+    // Here is an alternative of above code based on logic discussed in video:
+    // if (!(username || email)) {
+    //     throw new ApiError(400, "username or email is required") 
+    //}
+
+    
+    //3. find the user
+    const user = await User.findOne({
+        $or: [{username} , {email}]
+    })
+    if(!user){
+        throw new ApiError(404 , "User does not exist")
+    }
+
+
+
+    //4. check password
+    const isPasswordValid = await user.isPasswordCorrect(password)
+    if(!isPasswordValid){
+        throw new ApiError(401 , "Invalid user credentials")
+    }
+ 
+
+    //5. access and referesh token
+    const {accessToken , refreshToken } = await 
+    generateAccessAndRefreshTokens(user._id)
+
+    const loggedInUser = await User.findById(user._id)
+    .select("-password -refreshToken")
+
+
+
+    //6 . send cookies
+    const options = {
+        httpOnly : true,
+        secure: true
+    }
+
+
+   return res
+   .status(200)
+   .cookie("accessToken" , accessToken , options)
+   .cookie("refreshToken" , refreshToken , options)
+   .json(
+        new ApiResponse(
+            200,
+            { user: loggedInUser, accessToken,refreshToken },
+            // it is the case where user want to save the info because for the reason of localstorage , mobile applicn developmenet 
+            "User logged In Successfully"
+        )
+   )
+})
+
+
+const logoutUser = asyncHandler( async(req, res) => {
+    // cookies removes
+    // refreshtoken token reset
+
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set : { refreshToken: undefined }
+        },
+        { new : true }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .clearCookie("accessToken" , options)
+    .clearCookie("refreshToken" , options)
+    .json(new ApiResponse(200 , {} , "User logged Out"))
+
+})
+
+ 
 export {
     registerUser,
+    loginUser,
+    logoutUser
 }
 
 
@@ -109,6 +227,33 @@ if(fullName === "") throw new ApiError(400 , "fullname is requried")
 
 4. req.body // by express
 req.files   // multer
+
+5. for only username want 
+User.findOne({username })
+User.findOne({email})
+for both 
+User.findOne({
+    $or: [ { email } , { username }]
+})
+
+6. User vs user ( DIY again )
+User => we made this for user in moongoseDB and with this we can'nt use function which is created by us . we can use findOne etc
+user => normal function in block of program which can access the isPasswordCorrect and generateAccessToken etc
+
+7. generateAccessAndRefreshTokens
+const generateAccessAndRefreshTokens = async(userId) => {}
+here asyncHandler is not required because it is internal method not for web
+
+8. await
+chize agr time se na toh async-await use kro
+
+9. cookies
+    const options = { httpOnly : true, secure: true }
+    --- with help this cookie can modified by server only . Otherwise in default it can be modified by both frontend and server side
+
+10. logout without form (does'nt having access of user )
+-- by custom middlewares
+
 
 
 */
