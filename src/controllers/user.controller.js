@@ -207,7 +207,7 @@ const logoutUser = asyncHandler( async(req, res) => {
 const refreshAccessToken = asyncHandler( async(req , res) => {
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
 
-    if(incomingRefreshToken){
+    if(!incomingRefreshToken){
         throw new ApiError( 401 , "unauthorized request")
     }
 
@@ -302,6 +302,23 @@ chize agr time se na toh async-await use kro
 10. logout without form (does'nt having access of user )
 -- by custom middlewares
 
+
+11. ACCESS_TOKEN VS REFRESH_TOKEN
+Access Token:
+Purpose: Used to access protected resources (APIs, user data).
+Lifespan: Short-lived (minutes to hours).
+Security: Should be kept secure; usually stored in memory or HTTP-only cookies.
+Usage: Sent with each request to the server to authenticate the user.
+
+Refresh Token:
+Purpose: Used to obtain a new access token when the current one expires.
+Lifespan: Long-lived (days to months).
+Security: Must be kept very secure; often stored in HTTP-only cookies.
+Usage: Sent to the server to get a new access token without re-authenticating the user.
+Summary:
+
+Access Tokens are for accessing resources quickly and securely.
+Refresh Tokens are for getting new access tokens without re-login.
 
 
 */
