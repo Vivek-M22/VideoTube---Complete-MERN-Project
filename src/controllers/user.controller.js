@@ -277,7 +277,11 @@ const changeCurrentPassword = asyncHandler( async(req, res) => {
 const getCurrentUser = asyncHandler( async( req , res) => {
     return res
     .status(200)
-    .json(200 , req.user , "current user fetched successfully")
+    .json(new ApiResponse(
+        200 ,
+        req.user ,
+        "current user fetched successfully"
+    ))
 })
 
 
@@ -290,7 +294,7 @@ const updateAccountDetails = asyncHandler( async(req , res) => {
         throw new ApiError(400 , "All field are required")
     }
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set: {
@@ -317,6 +321,8 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
     if(!avatarLocalPath){
         throw new ApiError(400 , "Avatar file is missing")
     }
+
+    //TODO : delete old image - Assignment
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
 
@@ -453,5 +459,27 @@ Refresh Tokens are for getting new access tokens without re-login.
 
 12. mongoose operators (DIY)
 $set , 
+
+
+13. Subscription Schema
+
+doc contains : subscribers , channels
+SUBSCRIBER -> a, b, c, d, e
+channel -> cac , hcc , fcc 
+
+1stDoc (chan -> cac ,sub -> a)
+2ndDoc (chan -> cac ,sub -> b)
+3rdDoc (chan -> cac ,sub -> c)
+4thDoc (chan -> hcc ,sub -> c)
+5thDoc (chan -> fcc ,sub -> c)
+
+for counting no. of subscriber for channel cac then COUNT THE NO. OF DOCS OF CHANNEL HAVING CAC
+for couting no. of channel for particular subscriber(c ) => COUNT THE NO. OF DOCS  OF HAVING SUBS C
+
+
+
+
+
+
 
 */
